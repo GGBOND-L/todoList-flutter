@@ -26,7 +26,7 @@ class TodoApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/workbench': (context) => const WorkbenPage(),
+        '/workbench': (context) => const WorkbenchPage(),
       },
     );
   }
