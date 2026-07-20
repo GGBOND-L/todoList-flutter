@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/todo.dart';
 import '../enums/todo_filter.dart';
+import '../widgets/todo_item.dart';
+import '../widgets/todo_stat_card.dart';
+import '../widgets/todo_filter_button.dart';
+import '../widgets/user_card.dart';
+import '../widgets/todo_input.dart';
 
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
@@ -126,8 +131,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     });
   }
 
-  void handleFilter(TodoFilter filter, String title) {
-    debugPrint('过滤待办事项：$title, filter: $filter');
+  void handleFilter(TodoFilter filter) {
+    debugPrint('过滤待办事项：filter: $filter');
 
     setState(() {
       selectedFilter = filter;
@@ -157,7 +162,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
             const SizedBox(height: 24),
 
-            _buildUserCard(),
+            const UserCard(username: '用户名', email: '邮箱'),
 
             const SizedBox(height: 32),
 
@@ -174,37 +179,6 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             _buildTodoSection(),
           ],
         ),
-      ),
-    );
-  }
-
-  // 用户信息卡片
-  Widget _buildUserCard() {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 100),
-      decoration: BoxDecoration(
-        color: Colors.blueAccent,
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('当前用户信息卡片'),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.person, size: 64),
-              SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [Text('用户名'), Text('邮箱')],
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -232,26 +206,31 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       childAspectRatio: 1.5,
 
       children: [
-        _buildTaskCard('全部任务', todos.length, const Icon(Icons.list)),
-        _buildTaskCard(
-          '已完成',
-          todos.where((todo) => todo.isCompleted).length,
-          const Icon(Icons.done),
+        // _buildTaskCard('全部任务', todos.length, const Icon(Icons.list)),
+        TodoStatCard(
+          title: '全部任务',
+          total: todos.length,
+          icon: const Icon(Icons.list),
         ),
-        _buildTaskCard(
-          '未完成',
-          todos.where((todo) => !todo.isCompleted).length,
-          const Icon(Icons.close),
+        TodoStatCard(
+          title: '已完成',
+          total: todos.where((todo) => todo.isCompleted).length,
+          icon: const Icon(Icons.done),
         ),
-        _buildTaskCard(
-          '完成率',
-          todos.isEmpty
+        TodoStatCard(
+          title: '未完成',
+          total: todos.where((todo) => !todo.isCompleted).length,
+          icon: const Icon(Icons.close),
+        ),
+        TodoStatCard(
+          title: '完成率',
+          total: todos.isEmpty
               ? 0
               : (todos.where((todo) => todo.isCompleted).length /
                         todos.length *
                         100)
                     .toInt(),
-          const Icon(Icons.percent),
+          icon: const Icon(Icons.percent),
         ),
       ],
     );
@@ -275,26 +254,35 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         Row(
           children: [
             Expanded(
-              child: _buildTaskFilterCard(
-                '全部任务',
-                TodoFilter.all,
-                selectedFilter == TodoFilter.all,
+              // child: _buildTaskFilterCard(
+              //   '全部任务',
+              //   TodoFilter.all,
+              //   selectedFilter == TodoFilter.all,
+              // ),
+              child: TodoFilterButton(
+                filter: TodoFilter.all,
+                title: '全部任务',
+                selected: selectedFilter == TodoFilter.all,
+                onTap: (value) => handleFilter(value),
+                // onTap: handleFilter, // 为什么onTap: (value) => handleFilter(value),onTap: handleFilter都可以
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildTaskFilterCard(
-                '已完成',
-                TodoFilter.completed,
-                selectedFilter == TodoFilter.completed,
+              child: TodoFilterButton(
+                filter: TodoFilter.completed,
+                title: '已完成',
+                selected: selectedFilter == TodoFilter.completed,
+                onTap: (value) => handleFilter(value),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildTaskFilterCard(
-                '未完成',
-                TodoFilter.incomplete,
-                selectedFilter == TodoFilter.incomplete,
+              child: TodoFilterButton(
+                filter: TodoFilter.incomplete,
+                title: '未完成',
+                selected: selectedFilter == TodoFilter.incomplete,
+                onTap: (value) => handleFilter(value),
               ),
             ),
           ],
@@ -308,36 +296,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 我的待办事项区域
-        const Text(
-          '我的待办',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF111827),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: '输入新的待办事项,例如:学习 Flutter',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                controller: todoController,
-              ),
-            ),
-
-            const SizedBox(width: 12), // 间距
-
-            ElevatedButton(onPressed: handleAddTodo, child: const Text('添加')),
-          ],
-        ),
+        TodoInput(controller: todoController, onAdd: handleAddTodo),
 
         const SizedBox(height: 12),
 
@@ -347,142 +306,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // const SizedBox(height: 12),
 
         // _buildTaskItem('学习 Dart', false, '2023-06-02'),
-        ...filteredTodos.map((todo) => _buildTaskItem(todo)),
+        // ...filteredTodos.map((todo) {
+        //   return TodoItem(todo: todo, onDelete:() => handleDeleteTask(todo.id), onToggle: () => handleCompleteTodo(todo), onEdit: () => _showEditDialog(todo),)
+        // })
+        ...filteredTodos.map(
+          (todo) => TodoItem(
+            todo: todo,
+            onDelete: () => handleDeleteTask(todo.id),
+            onToggle: () => handleCompleteTodo(todo),
+            onEdit: () => _showEditDialog(todo),
+          ),
+        ),
       ],
-    );
-  }
-
-  // 任务统计小卡片
-  Widget _buildTaskCard(String title, int count, Widget icon) {
-    return Container(
-      // 样式装饰器
-      decoration: BoxDecoration(
-        color: Colors.white, // 盒子的底色
-        // 核心：在这里给小盒子添加边框
-        border: Border.all(
-          color: Colors.blueAccent, // 边框颜色
-          width: 1.5, // 边框粗细
-        ),
-
-        // 可选：加个圆角让边框更好看
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-
-      // 盒子的内边距
-      padding: const EdgeInsets.all(16.0),
-
-      child: Row(
-        children: [
-          icon,
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [Text('$count'), Text(title)],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 任务筛选小卡片
-  Widget _buildTaskFilterCard(String title, TodoFilter filter, bool selected) {
-    return Container(
-      height: 40.0, // 核心：在这里强制固定高度
-      decoration: BoxDecoration(
-        color: selected ? Colors.blueAccent : Colors.grey.shade50,
-
-        border: Border.all(
-          color: selected ? Colors.blueAccent : Colors.grey.shade300,
-          width: 1.5,
-        ),
-
-        borderRadius: BorderRadius.circular(8),
-      ),
-      alignment: Alignment.center,
-      // child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      child: TextButton(
-        onPressed: () {
-          handleFilter(filter, title);
-        },
-        child: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-
-            color: selected ? Colors.white : Colors.blueAccent,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTaskItem(Todo todo) {
-    return Container(
-      // 优化 1：去掉硬编码的 height: 80.0，改用我们第一节聊到的最小高度 constraints
-      // 这样内容少时它是小盒子，放了编辑按钮也能平滑撑开，绝不溢出
-      constraints: const BoxConstraints(minHeight: 70.0),
-      margin: const EdgeInsets.symmetric(vertical: 6), // 列表项之间的上下外边距
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border.all(
-          color: Colors.blueAccent.withAlpha(100), // 弱化一下边框颜色视觉更好
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      // 优化 2：使用 ListTile 替代自己手写的复杂 Column/Row
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-
-        // 左侧放置：复选框
-        leading: Checkbox(
-          onChanged: (value) => handleCompleteTodo(todo),
-          value: todo.isCompleted,
-        ),
-
-        // 中间主体：标题
-        title: Text(
-          todo.title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            // 如果完成了，加个好看的删除线效果
-            decoration: todo.isCompleted ? TextDecoration.lineThrough : null,
-            color: todo.isCompleted ? Colors.grey : Colors.black87,
-          ),
-        ),
-
-        // 中间副标题：日期
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Text(
-            todo.createdAt,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ),
-
-        // 右侧放置：操作按钮区域
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min, // 核心：必须限制 Row 只占用内部图标的大小
-          children: [
-            // 编辑按钮
-            IconButton(
-              constraints: const BoxConstraints(), // 紧凑型按钮，减小默认的 48 像素大外边距
-              padding: const EdgeInsets.all(8),
-              onPressed: () {
-                _showEditDialog(todo);
-              },
-              icon: const Icon(Icons.edit, color: Colors.blueGrey, size: 20),
-            ),
-            // 删除按钮
-            IconButton(
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(8),
-              onPressed: () => handleDeleteTask(todo.id),
-              icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
