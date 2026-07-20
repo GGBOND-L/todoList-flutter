@@ -73,15 +73,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     }
   }
 
-  void _showEditDialog(Todo todo) {
+  Future<void> _showEditDialog(Todo todo) async {
     debugPrint('编辑待办事项：${todo.id}');
 
     // 创建一个 TextEditingController 用于编辑，赋值
     final controller = TextEditingController(text: todo.title);
 
-    showDialog(
+    await showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('编辑任务'),
 
@@ -96,7 +96,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
               child: const Text('取消'),
             ),
@@ -121,6 +121,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         );
       },
     );
+
+    controller.dispose();
   }
 
   void handleCompleteTodo(Todo todo) {
