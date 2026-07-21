@@ -7,7 +7,7 @@ import '../widgets/todo_filter_button.dart';
 import '../widgets/user_card.dart';
 import '../widgets/todo_input.dart';
 import '../controllers/todo_controller.dart';
-import '../providers/todo_provider.dart';
+import 'package:provider/provider.dart';
 
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
@@ -18,7 +18,6 @@ class WorkbenchPage extends StatefulWidget {
 
 class _WorkbenchPageState extends State<WorkbenchPage> {
   // final TodoController controller = TodoController();
-  late TodoController controller;
 
   final TextEditingController todoController = TextEditingController();
 
@@ -27,7 +26,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     debugPrint('添加待办事项：$title');
 
     if (title.isNotEmpty) {
-      controller.addTodo(title);
+      context.read<TodoController>().addTodo(title);
+
       todoController.clear(); // 清空输入框
     }
   }
@@ -35,7 +35,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   void handleDeleteTask(String id) {
     debugPrint('删除待办事项：$id');
     if (id.isNotEmpty) {
-      controller.deleteTodo(id);
+      context.read<TodoController>().deleteTodo(id);
     }
   }
 
@@ -75,7 +75,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                   return;
                 }
 
-                controller.updateTodoTitle(todo.id, newTitle);
+                context.read<TodoController>().updateTodoTitle(
+                  todo.id,
+                  newTitle,
+                );
 
                 Navigator.pop(context);
               },
@@ -92,20 +95,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   void handleCompleteTodo(Todo todo) {
     debugPrint('完成待办事项：${todo.id}');
 
-    controller.toggleTodo(todo.id);
+    context.read<TodoController>().toggleTodo(todo.id);
   }
 
   void handleFilter(TodoFilter filter) {
     debugPrint('过滤待办事项：filter: $filter');
 
-    controller.changeFilter(filter);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    controller = TodoProvider.of(context);
+    context.read<TodoController>().changeFilter(filter);
   }
 
   @override
@@ -155,6 +151,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   // 任务统计卡片
   Widget _buildStatisticsSection() {
+    final controller = context.watch<TodoController>();
+
     return GridView.count(
       // 核心：强制网格紧凑包裹内容，防止无限高度报错
       shrinkWrap: true,
@@ -202,6 +200,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   }
 
   Widget _buildFilterSection() {
+    final controller = context.watch<TodoController>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,6 +257,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   }
 
   Widget _buildTodoSection() {
+    final todos = context.watch<TodoController>().filteredTodos;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -274,7 +276,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // ...filteredTodos.map((todo) {
         //   return TodoItem(todo: todo, onDelete:() => handleDeleteTask(todo.id), onToggle: () => handleCompleteTodo(todo), onEdit: () => _showEditDialog(todo),)
         // })
-        ...controller.filteredTodos.map(
+        ...todos.map(
           (todo) => TodoItem(
             todo: todo,
             onDelete: () => handleDeleteTask(todo.id),

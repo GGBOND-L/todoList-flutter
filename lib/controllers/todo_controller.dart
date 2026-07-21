@@ -73,6 +73,7 @@ class TodoController extends ChangeNotifier {
 
     _todos.add(todo);
 
+    // 这是必须要写的吗？
     notifyListeners();
   }
 

@@ -3,10 +3,16 @@ import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/workbench_page.dart';
 // import './controllers/todo_controller.dart';
-import './providers/todo_provider.dart';
+import 'package:provider/provider.dart';
+import './controllers/todo_controller.dart';
 
 void main() {
-  runApp(const ChangeNotifierProvider(child: TodoApp()));
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TodoController(),
+      child: const TodoApp(),
+    ),
+  );
 }
 
 /// 应用入口组件
