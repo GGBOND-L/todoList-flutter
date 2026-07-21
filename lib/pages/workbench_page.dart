@@ -8,6 +8,7 @@ import '../widgets/user_card.dart';
 import '../widgets/todo_input.dart';
 import '../controllers/todo_controller.dart';
 import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
@@ -102,6 +103,19 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     debugPrint('过滤待办事项：filter: $filter');
 
     context.read<TodoController>().changeFilter(filter);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    testApi();
+  }
+
+  void testApi() {
+    final apiService = ApiService();
+
+    apiService.getTodos();
   }
 
   @override
