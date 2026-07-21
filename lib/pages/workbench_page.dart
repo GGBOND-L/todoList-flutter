@@ -7,6 +7,7 @@ import '../widgets/todo_filter_button.dart';
 import '../widgets/user_card.dart';
 import '../widgets/todo_input.dart';
 import '../controllers/todo_controller.dart';
+import '../providers/todo_provider.dart';
 
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
@@ -16,7 +17,8 @@ class WorkbenchPage extends StatefulWidget {
 }
 
 class _WorkbenchPageState extends State<WorkbenchPage> {
-  final TodoController controller = TodoController();
+  // final TodoController controller = TodoController();
+  late TodoController controller;
 
   final TextEditingController todoController = TextEditingController();
 
@@ -100,23 +102,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    controller.addListener(_handleControllerChanged);
-  }
-
-  void _handleControllerChanged() {
-    // 为什么一定要写setState，但是里面是空的？
-    setState(() {});
+    controller = TodoProvider.of(context);
   }
 
   @override
   void dispose() {
-    // controller.removeListener(_handleControllerChanged);
-
-    controller.dispose();
-
     todoController.dispose();
 
     super.dispose();
