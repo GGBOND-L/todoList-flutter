@@ -6,6 +6,7 @@ import '../widgets/todo_stat_card.dart';
 import '../widgets/todo_filter_button.dart';
 import '../widgets/user_card.dart';
 import '../widgets/todo_input.dart';
+import '../controllers/todo_controller.dart';
 
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
@@ -15,33 +16,7 @@ class WorkbenchPage extends StatefulWidget {
 }
 
 class _WorkbenchPageState extends State<WorkbenchPage> {
-  final List<Todo> todos = [
-    Todo(
-      id: '1',
-      title: '学习 Flutter122',
-      isCompleted: true,
-      createdAt: '2023-06-01',
-    ),
-    Todo(
-      id: '2',
-      title: '学习 Dart2222211',
-      isCompleted: false,
-      createdAt: '2023-06-02',
-    ),
-  ];
-
-  TodoFilter selectedFilter = TodoFilter.all; // selectedFilter = '全部';
-
-  List<Todo> get filteredTodos {
-    switch (selectedFilter) {
-      case TodoFilter.all:
-        return todos;
-      case TodoFilter.completed:
-        return todos.where((todo) => todo.isCompleted).toList();
-      case TodoFilter.incomplete:
-        return todos.where((todo) => !todo.isCompleted).toList();
-    }
-  }
+  final TodoController controller = TodoController();
 
   final TextEditingController todoController = TextEditingController();
 
@@ -50,26 +25,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     debugPrint('添加待办事项：$title');
 
     if (title.isNotEmpty) {
-      setState(() {
-        todos.add(
-          Todo(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            title: title,
-            isCompleted: false,
-            createdAt: DateTime.now().toString(),
-          ),
-        );
-        todoController.clear(); // 清空输入框
-      });
+      controller.addTodo(title);
+      todoController.clear(); // 清空输入框
     }
   }
 
   void handleDeleteTask(String id) {
     debugPrint('删除待办事项：$id');
     if (id.isNotEmpty) {
-      setState(() {
-        todos.removeWhere((todo) => todo.id == id);
-      });
+      controller.deleteTodo(id);
     }
   }
 
@@ -77,7 +41,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     debugPrint('编辑待办事项：${todo.id}');
 
     // 创建一个 TextEditingController 用于编辑，赋值
-    final controller = TextEditingController(text: todo.title);
+    final editController = TextEditingController(text: todo.title);
 
     await showDialog<void>(
       context: context,
@@ -86,7 +50,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           title: const Text('编辑任务'),
 
           content: TextField(
-            controller: controller,
+            controller: editController,
             decoration: const InputDecoration(
               hintText: '请输入任务标题',
               border: OutlineInputBorder(),
@@ -103,15 +67,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
             ElevatedButton(
               onPressed: () {
-                final newTitle = controller.text.trim();
+                final newTitle = editController.text.trim();
 
                 if (newTitle.isEmpty) {
                   return;
                 }
 
-                setState(() {
-                  todo.title = newTitle;
-                });
+                controller.updateTodoTitle(todo.id, newTitle);
 
                 Navigator.pop(context);
               },
@@ -122,28 +84,41 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       },
     );
 
-    controller.dispose();
+    editController.dispose();
   }
 
   void handleCompleteTodo(Todo todo) {
     debugPrint('完成待办事项：${todo.id}');
 
-    setState(() {
-      todo.isCompleted = !todo.isCompleted;
-    });
+    controller.toggleTodo(todo.id);
   }
 
   void handleFilter(TodoFilter filter) {
     debugPrint('过滤待办事项：filter: $filter');
 
-    setState(() {
-      selectedFilter = filter;
-    });
+    controller.changeFilter(filter);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller.addListener(_handleControllerChanged);
+  }
+
+  void _handleControllerChanged() {
+    // 为什么一定要写setState，但是里面是空的？
+    setState(() {});
   }
 
   @override
   void dispose() {
+    // controller.removeListener(_handleControllerChanged);
+
+    controller.dispose();
+
     todoController.dispose();
+
     super.dispose();
   }
 
@@ -211,27 +186,22 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // _buildTaskCard('全部任务', todos.length, const Icon(Icons.list)),
         TodoStatCard(
           title: '全部任务',
-          total: todos.length,
+          total: controller.todos.length,
           icon: const Icon(Icons.list),
         ),
         TodoStatCard(
           title: '已完成',
-          total: todos.where((todo) => todo.isCompleted).length,
+          total: controller.completedCount,
           icon: const Icon(Icons.done),
         ),
         TodoStatCard(
           title: '未完成',
-          total: todos.where((todo) => !todo.isCompleted).length,
+          total: controller.incompleteCount,
           icon: const Icon(Icons.close),
         ),
         TodoStatCard(
           title: '完成率',
-          total: todos.isEmpty
-              ? 0
-              : (todos.where((todo) => todo.isCompleted).length /
-                        todos.length *
-                        100)
-                    .toInt(),
+          total: controller.completedRate,
           icon: const Icon(Icons.percent),
         ),
       ],
@@ -264,7 +234,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               child: TodoFilterButton(
                 filter: TodoFilter.all,
                 title: '全部任务',
-                selected: selectedFilter == TodoFilter.all,
+                selected: controller.filter == TodoFilter.all,
                 onTap: (value) => handleFilter(value),
                 // onTap: handleFilter, // 为什么onTap: (value) => handleFilter(value),onTap: handleFilter都可以
               ),
@@ -274,7 +244,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               child: TodoFilterButton(
                 filter: TodoFilter.completed,
                 title: '已完成',
-                selected: selectedFilter == TodoFilter.completed,
+                selected: controller.filter == TodoFilter.completed,
                 onTap: (value) => handleFilter(value),
               ),
             ),
@@ -283,7 +253,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               child: TodoFilterButton(
                 filter: TodoFilter.incomplete,
                 title: '未完成',
-                selected: selectedFilter == TodoFilter.incomplete,
+                selected: controller.filter == TodoFilter.incomplete,
                 onTap: (value) => handleFilter(value),
               ),
             ),
@@ -311,7 +281,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // ...filteredTodos.map((todo) {
         //   return TodoItem(todo: todo, onDelete:() => handleDeleteTask(todo.id), onToggle: () => handleCompleteTodo(todo), onEdit: () => _showEditDialog(todo),)
         // })
-        ...filteredTodos.map(
+        ...controller.filteredTodos.map(
           (todo) => TodoItem(
             todo: todo,
             onDelete: () => handleDeleteTask(todo.id),

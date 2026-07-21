@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/workbench_page.dart';
+// import './controllers/todo_controller.dart';
+// import './providers/todo_provider.dart';
 
 void main() {
-  runApp(const TodoApp());
+  // runApp(TodoProvider(controller: TodoController(), child: const MyApp()));
+  runApp(TodoApp());
 }
 
 /// 应用入口组件
