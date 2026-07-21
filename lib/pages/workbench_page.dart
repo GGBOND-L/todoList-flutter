@@ -9,6 +9,7 @@ import '../widgets/todo_input.dart';
 import '../controllers/todo_controller.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../widgets/edit_todo_dialog.dart';
 
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
@@ -41,56 +42,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   }
 
   Future<void> _showEditDialog(Todo todo) async {
-    debugPrint('编辑待办事项：${todo.id}');
-
-    // 创建一个 TextEditingController 用于编辑，赋值
-    final editController = TextEditingController(text: todo.title);
-
-    await showDialog<void>(
+    final newTitle = await showDialog<String>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('编辑任务'),
-
-          content: TextField(
-            controller: editController,
-            decoration: const InputDecoration(
-              hintText: '请输入任务标题',
-              border: OutlineInputBorder(),
-            ),
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('取消'),
-            ),
-
-            ElevatedButton(
-              onPressed: () {
-                final newTitle = editController.text.trim();
-
-                if (newTitle.isEmpty) {
-                  return;
-                }
-
-                context.read<TodoController>().updateTodoTitle(
-                  todo.id,
-                  newTitle,
-                );
-
-                Navigator.pop(context);
-              },
-              child: const Text('保存'),
-            ),
-          ],
-        );
+      builder: (_) {
+        return EditTodoDialog(title: todo.title);
       },
     );
 
-    editController.dispose();
+    if (newTitle == null) {
+      return;
+    }
+
+    context.read<TodoController>().updateTodoTitle(todo.id, newTitle);
   }
 
   void handleCompleteTodo(Todo todo) {
