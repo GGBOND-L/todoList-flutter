@@ -8,7 +8,6 @@ import '../widgets/user_card.dart';
 import '../widgets/todo_input.dart';
 import '../controllers/todo_controller.dart';
 import 'package:provider/provider.dart';
-import '../services/api_service.dart';
 import '../widgets/edit_todo_dialog.dart';
 
 class WorkbenchPage extends StatefulWidget {
@@ -34,11 +33,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     }
   }
 
-  void handleDeleteTask(String id) {
+  void handleDeleteTask(int id) {
     debugPrint('删除待办事项：$id');
-    if (id.isNotEmpty) {
-      context.read<TodoController>().deleteTodo(id);
-    }
+
+    context.read<TodoController>().deleteTodo(id);
   }
 
   Future<void> _showEditDialog(Todo todo) async {
@@ -68,17 +66,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     context.read<TodoController>().changeFilter(filter);
   }
 
+  bool _loaded = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    testApi();
-  }
+    if (!_loaded) {
+      _loaded = true;
 
-  void testApi() {
-    final apiService = ApiService();
-
-    apiService.getTodos();
+      context.read<TodoController>().loadTodos();
+    }
   }
 
   @override

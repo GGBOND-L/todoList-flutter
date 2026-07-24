@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   late final Dio dio;
@@ -18,14 +19,14 @@ class ApiService {
     );
   }
 
-  Future<void> getTodos() async {
+  Future<Response> getTodos() async {
     try {
       final response = await dio.get('/todos');
 
-      print('接口返回状态码: ${response.statusCode}');
-      print('接口返回数据: ${response.data}');
-    } catch (e) {
-      print('请求失败: $e');
+      return response;
+    } on DioException catch (e) {
+      debugPrint('Dio请求异常: ${e.message}');
+      rethrow;
     }
   }
 }

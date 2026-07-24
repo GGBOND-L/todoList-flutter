@@ -5,11 +5,28 @@ import 'pages/workbench_page.dart';
 // import './controllers/todo_controller.dart';
 import 'package:provider/provider.dart';
 import './controllers/todo_controller.dart';
+import 'services/api_service.dart';
+import 'repositories/todo_repository.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => TodoController(),
+    MultiProvider(
+      providers: [
+        Provider(create: (_) => ApiService()),
+
+        Provider(
+          create: (context) {
+            return TodoRepository(context.read<ApiService>());
+          },
+        ),
+
+        ChangeNotifierProvider(
+          create: (context) {
+            return TodoController(context.read<TodoRepository>());
+          },
+        ),
+      ],
+
       child: const TodoApp(),
     ),
   );

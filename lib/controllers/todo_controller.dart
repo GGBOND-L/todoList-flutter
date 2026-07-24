@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import '../enums/todo_filter.dart';
 import '../models/todo.dart';
+import '../repositories/todo_repository.dart';
 
 class TodoController extends ChangeNotifier {
+  final TodoRepository repository;
+
+  TodoController(this.repository);
   // Todo列表状态
-  final List<Todo> _todos = [
-    Todo(
-      id: '1',
-      title: '学习 Flutter122',
-      isCompleted: true,
-      createdAt: '2023-06-01',
-    ),
-    Todo(
-      id: '2',
-      title: '学习 Dart2222211',
-      isCompleted: false,
-      createdAt: '2023-06-02',
-    ),
-  ];
+  final List<Todo> _todos = [];
+
+  Future<void> loadTodos() async {
+    final todos = await repository.fetchTodos();
+
+    _todos
+      ..clear()
+      ..addAll(todos);
+
+    notifyListeners();
+  }
 
   // 当前筛选状态
   TodoFilter _filter = TodoFilter.all;
@@ -25,7 +26,7 @@ class TodoController extends ChangeNotifier {
   TodoFilter get filter => _filter;
 
   List<Todo> get todos => List.unmodifiable(_todos);
-  // 为什么使用unmodifiable
+  // 为什么使用unmodifiable：防止外部修改 Controller 内部状态。
   // List<Todo> get todos => _todos;
   // 使用controller.todos
 
@@ -65,7 +66,7 @@ class TodoController extends ChangeNotifier {
 
   void addTodo(String title) {
     final todo = Todo(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: DateTime.now().millisecondsSinceEpoch,
       title: title,
       isCompleted: false,
       createdAt: DateTime.now().toString(),
@@ -77,13 +78,13 @@ class TodoController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteTodo(String id) {
+  void deleteTodo(int id) {
     _todos.removeWhere((todo) => todo.id == id);
 
     notifyListeners();
   }
 
-  void toggleTodo(String id) {
+  void toggleTodo(int id) {
     final todo = _todos.firstWhere((todo) => todo.id == id);
 
     todo.isCompleted = !todo.isCompleted;
@@ -97,7 +98,7 @@ class TodoController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateTodoTitle(String id, String title) {
+  void updateTodoTitle(int id, String title) {
     final todo = _todos.firstWhere((todo) => todo.id == id);
 
     todo.title = title;

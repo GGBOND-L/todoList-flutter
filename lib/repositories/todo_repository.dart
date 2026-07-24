@@ -1,16 +1,22 @@
-// import '../services/api_service.dart';
-// import '../models/todo.dart';
+import '../models/todo.dart';
+import '../services/api_service.dart';
 
-// class TodoRepository {
-//   final ApiService apiService;
+class TodoRepository {
+  final ApiService apiService;
 
-//   TodoRepository(this.apiService);
+  TodoRepository(this.apiService);
 
-//   Future<List<Todo>> fetchTodos() async {
-//     final response = await apiService.getTodos();
+  Future<List<Todo>> fetchTodos() async {
+    final response = await apiService.getTodos();
 
-//     final data = response.data;
+    final responseData = response.data;
 
-//     return data.map<Todo>((json) => Todo.fromJson(json)).toList();
-//   }
-// }
+    if (responseData['code'] != 0) {
+      throw Exception(responseData['message']);
+    }
+
+    final List<dynamic> todoList = responseData['data'];
+
+    return todoList.map((json) => Todo.fromJson(json)).toList();
+  }
+}
